@@ -266,9 +266,9 @@ function pasoTick(sim) {
   const t = sim.tickActual;
   const procs = sim.procs;
 
-  // 1. Llegadas: procesos que llegan en este tick entran a cola (orden por llegada)
+  // 1. Llegadas: procesos que llegan en este tick entran a cola (al final)
   procs.filter(p => p.arrival === t && !p.finished && !p.blocked)
-    .forEach(p => { if (!sim.colaListos?.includes(p)) insertarEnColaPorLlegada(sim.colaListos, p); });
+    .forEach(p => { if (!sim.colaListos?.includes(p)) sim.colaListos.push(p); });
 
   // 2. Liberados de bloqueo
   if (sim.bloqueados) {
@@ -280,7 +280,7 @@ function pasoTick(sim) {
     recienLiberados.forEach(b => {
       const p = procs.find(x => x.id === b.id);
       if (p) { p.blocked = false; p.blockRemaining = 0; }
-      if (!sim.colaListos?.includes(p)) insertarEnColaPorLlegada(sim.colaListos, p);
+      if (!sim.colaListos?.includes(p)) sim.colaListos.push(p);
     });
     sim.bloqueados = liberados;
   } else {
