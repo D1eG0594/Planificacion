@@ -332,6 +332,19 @@ td button.secondary:hover { background: var(--secondary-hover); }
 .stats-container tr.pl-row { background: rgba(0,176,240,0.1); }
 .stats-container tr.mejor { background: rgba(0,176,80,0.15); }
 
+/* ---------- Tabla de estadísticas por proceso (alineación) ---------- */
+.table-wrap table td.num {
+  text-align: right;
+  font-family: monospace;
+}
+.table-wrap table th {
+  text-align: center;
+}
+.table-wrap table td:first-child,
+.table-wrap table th:first-child {
+  text-align: left;
+}
+
 .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
 .metric-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.75rem; }
 .metric-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem; }
