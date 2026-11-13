@@ -405,8 +405,16 @@ function pasoRR(sim, t) {
   // Inicializar quantumRestante
   if (sim.quantumRestante === undefined || sim.quantumRestante <= 0) sim.quantumRestante = Q;
 
-  // 1. Si no hay proceso en CPU y hay listos, verificar si necesita PL
-  if (!sim.enCPU && sim.colaListos.length > 0) {
+  // 1. PRIMERO: Si venimos de un tick PL, asignar CPU y ejecutar este mismo tick
+  if (sim.esPL && !sim.enCPU && sim.colaListos.length > 0) {
+    sim.esPL = false;
+    sim.enCPU = sim.colaListos.shift();
+    if (sim.enCPU.firstExecStart === null) sim.enCPU.firstExecStart = t;
+    sim.quantumRestante = Q;
+  }
+
+  // 2. DESPUÉS: Si no hay proceso en CPU y hay listos, verificar si necesita PL
+  if (!sim.enCPU && sim.colaListos.length > 0 && !sim.esPL) {
     if (usarPL) {
       // Tick de PL: consumir 1 tick en el dispatcher, ningún proceso ejecuta
       sim.esPL = true;
@@ -414,14 +422,6 @@ function pasoRR(sim, t) {
       return;
     }
     // Sin PL, asignar directamente y ejecutar este mismo tick
-    sim.enCPU = sim.colaListos.shift();
-    if (sim.enCPU.firstExecStart === null) sim.enCPU.firstExecStart = t;
-    sim.quantumRestante = Q;
-  }
-
-  // 2. Si venimos de un tick PL, asignar CPU Y ejecutar en este mismo tick
-  if (sim.esPL && !sim.enCPU && sim.colaListos.length > 0) {
-    sim.esPL = false;
     sim.enCPU = sim.colaListos.shift();
     if (sim.enCPU.firstExecStart === null) sim.enCPU.firstExecStart = t;
     sim.quantumRestante = Q;
