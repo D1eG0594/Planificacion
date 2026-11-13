@@ -292,14 +292,14 @@ function pasoTick(sim) {
 
   // 5. Registrar gantt y timeline
   sim.gantt[t] = {
-    enCPU: sim.enCPU ? sim.enCPU.id : null,
+    enCPU: sim.ejecutandoEsteTick,
     cola: (sim.colaListos || []).map(p => p.id),
     bloqueados: (sim.bloqueados || []).map(b => b.id),
     esPL: sim.esPL || false
   };
   sim.timeline.push({
     tick: t,
-    enCPU: sim.enCPU ? sim.enCPU.id : (sim.esPL ? 'PL' : null),
+    enCPU: sim.ejecutandoEsteTick || (sim.esPL ? 'PL' : null),
     cola: (sim.colaListos || []).map(p => p.id),
     bloqueados: (sim.bloqueados || []).map(b => ({id: b.id, rem: b.remaining}))
   });
@@ -315,6 +315,7 @@ function pasoTick(sim) {
 
 function pasoFCFS(sim, t) {
   if (!sim.colaListos) sim.colaListos = [];
+  let ejecutando = null;
   // Si CPU libre y hay listos, tomar el primero
   if (!sim.enCPU && sim.colaListos.length > 0) {
     sim.enCPU = sim.colaListos.shift();
@@ -324,15 +325,18 @@ function pasoFCFS(sim, t) {
   if (sim.enCPU) {
     sim.enCPU.executed++;
     sim.enCPU.remaining--;
+    ejecutando = sim.enCPU.id;
     if (sim.enCPU.remaining <= 0) {
       sim.enCPU.finished = true;
       sim.enCPU = null;
     }
   }
+  sim.ejecutandoEsteTick = ejecutando;
 }
 
 function pasoSJF(sim, t) {
   if (!sim.colaListos) sim.colaListos = [];
+  let ejecutando = null;
   // Si CPU libre, elegir menor burst total
   if (!sim.enCPU && sim.colaListos.length > 0) {
     sim.colaListos.sort((a, b) => a.burst - b.burst || a.id.localeCompare(b.id));
@@ -343,15 +347,18 @@ function pasoSJF(sim, t) {
   if (sim.enCPU) {
     sim.enCPU.executed++;
     sim.enCPU.remaining--;
+    ejecutando = sim.enCPU.id;
     if (sim.enCPU.remaining <= 0) {
       sim.enCPU.finished = true;
       sim.enCPU = null;
     }
   }
+  sim.ejecutandoEsteTick = ejecutando;
 }
 
 function pasoSRTF(sim, t) {
   if (!sim.colaListos) sim.colaListos = [];
+  let ejecutando = null;
   // Candidatos: los listos + el que está en CPU
   const candidatos = [...(sim.colaListos || [])];
   if (sim.enCPU && !sim.enCPU.finished) candidatos.push(sim.enCPU);
@@ -375,17 +382,20 @@ function pasoSRTF(sim, t) {
   if (sim.enCPU) {
     sim.enCPU.executed++;
     sim.enCPU.remaining--;
+    ejecutando = sim.enCPU.id;
     if (sim.enCPU.remaining <= 0) {
       sim.enCPU.finished = true;
       sim.enCPU = null;
     }
   }
+  sim.ejecutandoEsteTick = ejecutando;
 }
 
 function pasoRR(sim, t) {
   if (!sim.colaListos) sim.colaListos = [];
   const Q = sim.quantum;
   const usarPL = sim.usarPL;
+  let ejecutando = null;
 
   // Inicializar quantumRestante si es 0 (primera vez)
   if (sim.quantumRestante <= 0) sim.quantumRestante = Q;
@@ -395,6 +405,7 @@ function pasoRR(sim, t) {
     if (usarPL) {
       // Tick de PL
       sim.esPL = true;
+      sim.ejecutandoEsteTick = null;
       return;
     }
     // Sin PL, asignar directamente
@@ -411,6 +422,7 @@ function pasoRR(sim, t) {
       if (sim.enCPU.firstExecStart === null) sim.enCPU.firstExecStart = t;
       sim.quantumRestante = Q;
     }
+    sim.ejecutandoEsteTick = null;
     return;
   }
 
@@ -419,6 +431,7 @@ function pasoRR(sim, t) {
     sim.enCPU.executed++;
     sim.enCPU.remaining--;
     sim.quantumRestante--;
+    ejecutando = sim.enCPU.id;
 
     if (sim.enCPU.remaining <= 0) {
       sim.enCPU.finished = true;
@@ -433,6 +446,7 @@ function pasoRR(sim, t) {
       sim.quantumRestante = Q;
     }
   }
+  sim.ejecutandoEsteTick = ejecutando;
 }
 
 // ========== ESTADÍSTICAS ==========
