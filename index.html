@@ -117,6 +117,37 @@
       </div>
     </section>
 
+    <!-- ========== EDICIÓN EN VIVO DE PROCESOS CPU (Paso 5.1) ========== -->
+    <section id="panel-edicion-cpu" class="tab-panel" style="display:none;">
+      <div class="module-card">
+        <h2>🛠️ Edición en Vivo de Procesos CPU</h2>
+        <p>Modifica llegadas, tiempos de ejecución y bloqueos. Los cambios se aplican instantáneamente a las 4 pestañas de algoritmos.</p>
+        <div class="table-wrap">
+          <table id="tablaProcesosCPU">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Llegada (Ii)</th>
+                <th>Ejecución (t)</th>
+                <th>Bloqueo 1 (trigger, dur)</th>
+                <th>Bloqueo 2 (trigger, dur)</th>
+                <th>Bloqueo 3 (trigger, dur)</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyProcesosCPU"></tbody>
+          </table>
+        </div>
+        <div class="table-actions">
+          <button id="btnAgregarProcesoCPU" type="button">+ Agregar proceso</button>
+          <button id="btnRestaurarProcesosCPU" type="button" class="secondary">Restaurar por defecto</button>
+        </div>
+        <div class="resumen-memoria" id="resumenProcesosCPU">
+          <p>Los cambios se recalculan automáticamente.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- ========== PESTAÑA: FCFS ========== -->
     <section id="panel-fcfs" class="tab-panel" style="display:none;">
       <div class="module-card">

@@ -983,7 +983,7 @@ function actualizarLabelTick(algoritmo) {
 // ---------- Botones Play ----------
 function actualizarBotonesPlay(algoritmo) {
   const btn = $(`#btn${algoritmo.toUpperCase()}Play`);
-  if (btn) btn.textContent = SIM.playing ? '⏸ Pausa' : '▶ Play';
+  if (btn) btn.textContent = playing ? '⏸ Pausa' : '▶ Play';
 }
 
 let playing = false;
@@ -1008,16 +1008,406 @@ function togglePlay(algoritmo) {
   actualizarBotonesPlay(algoritmo);
 }
 
-// ========== INICIALIZACIÓN ==========
-document.addEventListener('DOMContentLoaded', () => {
-  initTema();
-  initPestanas();
-  initParametrosMemoria();
+// =========================================
+// EDICIÓN EN VIVO DE PROCESOS CPU (Paso 5.1)
+// =========================================
+
+function renderTablaProcesosCPU() {
+  const tbody = $('#tbodyProcesosCPU');
+  tbody.innerHTML = '';
+
+  STATE.procesosCPU.forEach((p, idx) => {
+    const b1 = p.blocks[0] || { trigger: '-', dur: '-' };
+    const b2 = p.blocks[1] || { trigger: '-', dur: '-' };
+    const b3 = p.blocks[2] || { trigger: '-', dur: '-' };
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${p.id}</strong></td>
+      <td><input type="number" data-idx="${idx}" data-field="arrival" value="${p.arrival}" min="0" /></td>
+      <td><input type="number" data-idx="${idx}" data-field="burst" value="${p.burst}" min="1" /></td>
+      <td>
+        <input type="number" data-idx="${idx}" data-field="b1t" value="${b1.trigger}" min="0" />
+        <input type="number" data-idx="${idx}" data-field="b1d" value="${b1.dur}" min="0" />
+      </td>
+      <td>
+        <input type="number" data-idx="${idx}" data-field="b2t" value="${b2.trigger}" min="0" />
+        <input type="number" data-idx="${idx}" data-field="b2d" value="${b2.dur}" min="0" />
+      </td>
+      <td>
+        <input type="number" data-idx="${idx}" data-field="b3t" value="${b3.trigger}" min="0" />
+        <input type="number" data-idx="${idx}" data-field="b3d" value="${b3.dur}" min="0" />
+      </td>
+      <td>
+        <button class="secondary" onclick="app.eliminarProcesoCPU(${idx})">Eliminar</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function initEdicionProcesosCPU() {
+  const tbody = $('#tbodyProcesosCPU');
+  tbody.addEventListener('input', (e) => {
+    if (!e.target.matches('input')) return;
+    const idx = parseInt(e.target.dataset.idx);
+    const field = e.target.dataset.field;
+    const val = parseInt(e.target.value) || 0;
+    const p = STATE.procesosCPU[idx];
+
+    if (field === 'arrival') p.arrival = val;
+    if (field === 'burst') p.burst = val;
+    if (field === 'b1t') {
+      if (!p.blocks[0]) p.blocks[0] = { trigger: 0, dur: 0 };
+      p.blocks[0].trigger = val;
+    }
+    if (field === 'b1d') {
+      if (!p.blocks[0]) p.blocks[0] = { trigger: 0, dur: 0 };
+      p.blocks[0].dur = val;
+    }
+    if (field === 'b2t') {
+      if (!p.blocks[1]) p.blocks[1] = { trigger: 0, dur: 0 };
+      p.blocks[1].trigger = val;
+    }
+    if (field === 'b2d') {
+      if (!p.blocks[1]) p.blocks[1] = { trigger: 0, dur: 0 };
+      p.blocks[1].dur = val;
+    }
+    if (field === 'b3t') {
+      if (!p.blocks[2]) p.blocks[2] = { trigger: 0, dur: 0 };
+      p.blocks[2].trigger = val;
+    }
+    if (field === 'b3d') {
+      if (!p.blocks[2]) p.blocks[2] = { trigger: 0, dur: 0 };
+      p.blocks[2].dur = val;
+    }
+
+    // Recalcular todas las simulaciones
+    reiniciarSim('fcfs');
+    reiniciarSim('sjf');
+    reiniciarSim('srtf');
+    reiniciarSim('rr');
+    renderComparativo();
+  });
+}
+
+window.app = window.app || {};
+
+window.app.agregarProcesoCPU = function() {
+  const id = String.fromCharCode(65 + STATE.procesosCPU.length);
+  STATE.procesosCPU.push({ id, arrival: 0, burst: 5, blocks: [] });
+  renderTablaProcesosCPU();
+  reiniciarSim('fcfs');
+  reiniciarSim('sjf');
+  reiniciarSim('srtf');
+  reiniciarSim('rr');
+  renderComparativo();
+};
+
+window.app.eliminarProcesoCPU = function(idx) {
+  if (STATE.procesosCPU.length <= 1) return;
+  STATE.procesosCPU.splice(idx, 1);
+  renderTablaProcesosCPU();
+  reiniciarSim('fcfs');
+  reiniciarSim('sjf');
+  reiniciarSim('srtf');
+  reiniciarSim('rr');
+  renderComparativo();
+};
+
+window.app.restaurarProcesosCPU = function() {
+  STATE.procesosCPU = [
+    { id: 'A', arrival: 6, burst: 15, blocks: [{ trigger: 3, dur: 3 }, { trigger: 10, dur: 2 }] },
+    { id: 'B', arrival: 7, burst: 5, blocks: [{ trigger: 1, dur: 6 }, { trigger: 3, dur: 1 }] },
+    { id: 'C', arrival: 4, burst: 17, blocks: [{ trigger: 1, dur: 5 }, { trigger: 10, dur: 10 }, { trigger: 15, dur: 3 }] },
+    { id: 'D', arrival: 5, burst: 8, blocks: [{ trigger: 3, dur: 7 }, { trigger: 5, dur: 4 }] },
+    { id: 'E', arrival: 2, burst: 11, blocks: [{ trigger: 4, dur: 5 }, { trigger: 10, dur: 1 }] },
+    { id: 'F', arrival: 1, burst: 20, blocks: [{ trigger: 5, dur: 10 }, { trigger: 10, dur: 7 }, { trigger: 15, dur: 3 }] },
+    { id: 'G', arrival: 3, burst: 9, blocks: [{ trigger: 5, dur: 15 }] }
+  ];
+  renderTablaProcesosCPU();
+  reiniciarSim('fcfs');
+  reiniciarSim('sjf');
+  reiniciarSim('srtf');
+  reiniciarSim('rr');
+  renderComparativo();
+};
+
+// =========================================
+// PESTAÑA COMPARATIVA (Paso 4)
+// =========================================
+
+function renderComparativo() {
+  const cont = $('#tablaComparativo');
+  if (!cont) return;
+
+  const algs = ['fcfs', 'sjf', 'srtf', 'rr'];
+  const nombres = { fcfs: 'FCFS', sjf: 'SJF', srtf: 'SRTF', rr: 'Round Robin' };
+
+  // Recoger métricas globales de cada algoritmo
+  const metricas = {};
+  algs.forEach(a => {
+    const s = SIMS[a];
+    const g = s.statsGlobales;
+    metricas[a] = g || {};
+  });
+
+  // Determinar el mejor por cada métrica (menor es mejor)
+  const metricNames = ['promRetorno', 'promEspera', 'promPenalidad', 'promRespuesta'];
+  const mejores = {};
+  metricNames.forEach(m => {
+    let mejorVal = Infinity;
+    let mejoresAlgs = [];
+    algs.forEach(a => {
+      const v = parseFloat(metricas[a][m]) || Infinity;
+      if (v < mejorVal) { mejorVal = v; mejoresAlgs = [a]; }
+      else if (v === mejorVal) { mejoresAlgs.push(a); }
+    });
+    mejores[m] = mejoresAlgs;
+  });
+
+  let html = '<div class="comparativo-wrap">';
+  html += '<table>';
+  html += '<thead><tr>';
+  html += '<th>Métrica</th>';
+  algs.forEach(a => html += `<th>${nombres[a]}</th>`);
+  html += '<th>Mejor</th>';
+  html += '</tr></thead><tbody>';
+
+  // Fila: Promedio de Retorno
+  html += '<tr>';
+  html += '<td><strong>Prom. Retorno</strong></td>';
+  algs.forEach(a => {
+    const esMejor = mejores['promRetorno'].includes(a);
+    const cls = esMejor ? 'class="mejor"' : '';
+    html += `<td ${cls}>${metricas[a].promRetorno || '-'}</td>`;
+  });
+  html += `<td>${mejores['promRetorno'].map(a => nombres[a]).join(', ')} <span class="mejor-badge">✓</span></td>`;
+  html += '</tr>';
+
+  // Fila: Promedio de Espera
+  html += '<tr>';
+  html += '<td><strong>Prom. Espera</strong></td>';
+  algs.forEach(a => {
+    const esMejor = mejores['promEspera'].includes(a);
+    const cls = esMejor ? 'class="mejor"' : '';
+    html += `<td ${cls}>${metricas[a].promEspera || '-'}</td>`;
+  });
+  html += `<td>${mejores['promEspera'].map(a => nombres[a]).join(', ')} <span class="mejor-badge">✓</span></td>`;
+  html += '</tr>';
+
+  // Fila: Promedio de Penalidad
+  html += '<tr>';
+  html += '<td><strong>Prom. Penalidad</strong></td>';
+  algs.forEach(a => {
+    const esMejor = mejores['promPenalidad'].includes(a);
+    const cls = esMejor ? 'class="mejor"' : '';
+    html += `<td ${cls}>${metricas[a].promPenalidad || '-'}</td>`;
+  });
+  html += `<td>${mejores['promPenalidad'].map(a => nombres[a]).join(', ')} <span class="mejor-badge">✓</span></td>`;
+  html += '</tr>';
+
+  // Fila: Promedio T. Respuesta
+  html += '<tr>';
+  html += '<td><strong>Prom. T. Respuesta</strong></td>';
+  algs.forEach(a => {
+    const esMejor = mejores['promRespuesta'].includes(a);
+    const cls = esMejor ? 'class="mejor"' : '';
+    html += `<td ${cls}>${metricas[a].promRespuesta || '-'}</td>`;
+  });
+  html += `<td>${mejores['promRespuesta'].map(a => nombres[a]).join(', ')} <span class="mejor-badge">✓</span></td>`;
+  html += '</tr>';
+
+  // Fila: Tiempo Encendido
+  html += '<tr>';
+  html += '<td><strong>Tiempo Encendido</strong></td>';
+  algs.forEach(a => html += `<td>${metricas[a].tiempoEncendido || '-'}</td>`);
+  html += '<td>—</td>';
+  html += '</tr>';
+
+  // Fila: Uso Total CPU
+  html += '<tr>';
+  html += '<td><strong>Uso Total CPU</strong></td>';
+  algs.forEach(a => html += `<td>${metricas[a].usoTotal || '-'}</td>`);
+  html += '<td>—</td>';
+  html += '</tr>';
+
+  // Fila: CPU Desocupada
+  html += '<tr>';
+  html += '<td><strong>CPU Desocupada</strong></td>';
+  algs.forEach(a => html += `<td>${metricas[a].cpuDesocupada || '-'}</td>`);
+  html += '<td>—</td>';
+  html += '</tr>';
+
+  // Fila: % Uso CPU
+  html += '<tr>';
+  html += '<td><strong>% Uso CPU</strong></td>';
+  algs.forEach(a => html += `<td>${metricas[a].pctUsoCPU || '-'}%</td>`);
+  html += '<td>—</td>';
+  html += '</tr>';
+
+  html += '</tbody></table>';
+  html += '<p style="margin-top:0.5rem; font-size:0.85rem; color:var(--text-muted);"><span class="mejor-badge">✓</span> = Mejor algoritmo por métrica (menor valor)</p>';
+  html += '</div>';
+
+  cont.innerHTML = html;
+}
+
+// =========================================
+// PERSISTENCIA JSON (Paso 5.4)
+// =========================================
+
+function exportarJSON() {
+  const configuracion = {
+    memoria: {
+      ramTotalMiB: STATE.ramTotalMiB,
+      exeHeader: STATE.exeHeader,
+      stackSize: STATE.stackSize,
+      heapSize: STATE.heapSize,
+      numTiempos: STATE.numTiempos,
+      programas: STATE.programas,
+      matriz: STATE.matriz
+    },
+    cpu: {
+      procesosCPU: STATE.procesosCPU,
+      quantum: parseInt($('#quantumRR').value) || 3,
+      usarPL: $('#usarPLRR').checked
+    },
+    fechaExportacion: new Date().toISOString()
+  };
+
+  const blob = new Blob([JSON.stringify(configuracion, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `simulador-so-config-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importarJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const config = JSON.parse(e.target.result);
+
+      // Importar memoria
+      if (config.memoria) {
+        STATE.ramTotalMiB = config.memoria.ramTotalMiB || 16;
+        STATE.exeHeader = config.memoria.exeHeader || 2544;
+        STATE.stackSize = config.memoria.stackSize || 65536;
+        STATE.heapSize = config.memoria.heapSize || 131072;
+        STATE.numTiempos = config.memoria.numTiempos || 5;
+        STATE.programas = config.memoria.programas || STATE.programas;
+        STATE.matriz = config.memoria.matriz || {};
+
+        $('#ramTotal').value = STATE.ramTotalMiB;
+        $('#exeHeader').value = STATE.exeHeader;
+        $('#stackSize').value = STATE.stackSize;
+        $('#heapSize').value = STATE.heapSize;
+        $('#numTiempos').value = STATE.numTiempos;
+        actualizarEquivalenciasRAM();
+        renderTablaProgramas();
+        cargarMatrizPorDefecto();
+        renderMatriz();
+        renderResultadoInstantes();
+      }
+
+      // Importar CPU
+      if (config.cpu) {
+        STATE.procesosCPU = config.cpu.procesosCPU || STATE.procesosCPU;
+        $('#quantumRR').value = config.cpu.quantum || 3;
+        $('#usarPLRR').checked = config.cpu.usarPL !== false;
+
+        renderTablaProcesosCPU();
+        reiniciarSim('fcfs');
+        reiniciarSim('sjf');
+        reiniciarSim('srtf');
+        reiniciarSim('rr');
+        renderComparativo();
+      }
+
+      alert('Configuración importada correctamente.');
+    } catch (err) {
+      alert('Error al importar el archivo JSON: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function restaurarTodo() {
+  if (!confirm('¿Restaurar todos los valores por defecto? Se perderán los cambios actuales.')) return;
+
+  // Restaurar memoria
+  STATE.ramTotalMiB = 16;
+  STATE.exeHeader = 2544;
+  STATE.stackSize = 65536;
+  STATE.heapSize = 131072;
+  STATE.numTiempos = 5;
+  STATE.programas = [
+    { id: 'A', nombre: 'Chrome', disco: 3220120, text: 2599742, data: 532238 },
+    { id: 'B', nombre: 'Calendario', disco: 54877, text: 51248, data: 563 },
+    { id: 'C', nombre: 'Discord', disco: 579299, text: 52322, data: 496571 },
+    { id: 'D', nombre: 'Photoshop', disco: 1317966, text: 1154894, data: 154362 },
+    { id: 'E', nombre: 'VS Code', disco: 2025093, text: 1874529, data: 124032 },
+    { id: 'F', nombre: 'Karpersky', disco: 865237, text: 452963, data: 405477 },
+    { id: 'G', nombre: 'Word', disco: 1639224, text: 1254308, data: 254987 }
+  ];
+  STATE.matriz = {};
+
+  $('#ramTotal').value = 16;
+  $('#exeHeader').value = 2544;
+  $('#stackSize').value = 65536;
+  $('#heapSize').value = 131072;
+  $('#numTiempos').value = 5;
+
   actualizarEquivalenciasRAM();
   renderTablaProgramas();
   cargarMatrizPorDefecto();
   renderMatriz();
   renderResultadoInstantes();
+
+  // Restaurar CPU
+  STATE.procesosCPU = [
+    { id: 'A', arrival: 6, burst: 15, blocks: [{ trigger: 3, dur: 3 }, { trigger: 10, dur: 2 }] },
+    { id: 'B', arrival: 7, burst: 5, blocks: [{ trigger: 1, dur: 6 }, { trigger: 3, dur: 1 }] },
+    { id: 'C', arrival: 4, burst: 17, blocks: [{ trigger: 1, dur: 5 }, { trigger: 10, dur: 10 }, { trigger: 15, dur: 3 }] },
+    { id: 'D', arrival: 5, burst: 8, blocks: [{ trigger: 3, dur: 7 }, { trigger: 5, dur: 4 }] },
+    { id: 'E', arrival: 2, burst: 11, blocks: [{ trigger: 4, dur: 5 }, { trigger: 10, dur: 1 }] },
+    { id: 'F', arrival: 1, burst: 20, blocks: [{ trigger: 5, dur: 10 }, { trigger: 10, dur: 7 }, { trigger: 15, dur: 3 }] },
+    { id: 'G', arrival: 3, burst: 9, blocks: [{ trigger: 5, dur: 15 }] }
+  ];
+  $('#quantumRR').value = 3;
+  $('#usarPLRR').checked = true;
+
+  renderTablaProcesosCPU();
+  reiniciarSim('fcfs');
+  reiniciarSim('sjf');
+  reiniciarSim('srtf');
+  reiniciarSim('rr');
+  renderComparativo();
+
+  alert('Todos los valores han sido restaurados por defecto.');
+}
+
+// ========== INICIALIZACIÓN ==========
+document.addEventListener('DOMContentLoaded', () => {
+  initTema();
+  initPestanas();
+  initParametrosMemoria();
+  initEdicionProcesosCPU();
+  actualizarEquivalenciasRAM();
+  renderTablaProgramas();
+  renderTablaProcesosCPU();
+  cargarMatrizPorDefecto();
+  renderMatriz();
+  renderResultadoInstantes();
+  renderComparativo();
 
   // Inicializar simulaciones
   reiniciarSim('fcfs');
@@ -1026,28 +1416,39 @@ document.addEventListener('DOMContentLoaded', () => {
   reiniciarSim('rr');
 
   // Controles FCFS
-  $('#btnFcfsAnt').onclick = () => { SIM.activo = 'fcfs'; pasoTick(); };
-  $('#btnFcfsSig').onclick = () => { SIM.activo = 'fcfs'; pasoTick(); };
+  $('#btnFcfsAnt').onclick = () => { algoritmoActivo = 'fcfs'; pasoTick(); };
+  $('#btnFcfsSig').onclick = () => { algoritmoActivo = 'fcfs'; pasoTick(); };
   $('#btnFcfsPlay').onclick = () => { togglePlay('fcfs'); };
   $('#btnFcfsReset').onclick = () => { reiniciarSim('fcfs'); };
 
   // Controles SJF
-  $('#btnSjfAnt').onclick = () => { SIM.activo = 'sjf'; pasoTick(); };
-  $('#btnSjfSig').onclick = () => { SIM.activo = 'sjf'; pasoTick(); };
+  $('#btnSjfAnt').onclick = () => { algoritmoActivo = 'sjf'; pasoTick(); };
+  $('#btnSjfSig').onclick = () => { algoritmoActivo = 'sjf'; pasoTick(); };
   $('#btnSjfPlay').onclick = () => { togglePlay('sjf'); };
   $('#btnSjfReset').onclick = () => { reiniciarSim('sjf'); };
 
   // Controles SRTF
-  $('#btnSrtfAnt').onclick = () => { SIM.activo = 'srtf'; pasoTick(); };
-  $('#btnSrtfSig').onclick = () => { SIM.activo = 'srtf'; pasoTick(); };
+  $('#btnSrtfAnt').onclick = () => { algoritmoActivo = 'srtf'; pasoTick(); };
+  $('#btnSrtfSig').onclick = () => { algoritmoActivo = 'srtf'; pasoTick(); };
   $('#btnSrtfPlay').onclick = () => { togglePlay('srtf'); };
   $('#btnSrtfReset').onclick = () => { reiniciarSim('srtf'); };
 
   // Controles RR
-  $('#btnRrAnt').onclick = () => { SIM.activo = 'rr'; pasoTick(); };
-  $('#btnRrSig').onclick = () => { SIM.activo = 'rr'; pasoTick(); };
+  $('#btnRrAnt').onclick = () => { algoritmoActivo = 'rr'; pasoTick(); };
+  $('#btnRrSig').onclick = () => { algoritmoActivo = 'rr'; pasoTick(); };
   $('#btnRrPlay').onclick = () => { togglePlay('rr'); };
   $('#btnRrReset').onclick = () => { reiniciarSim('rr'); };
   $('#quantumRR').onchange = () => { reiniciarSim('rr'); };
   $('#usarPLRR').onchange = () => { reiniciarSim('rr'); };
+
+  // Controles Edición en Vivo
+  $('#btnAgregarProcesoCPU').onclick = () => window.app.agregarProcesoCPU();
+  $('#btnRestaurarProcesosCPU').onclick = () => window.app.restaurarProcesosCPU();
+
+  // Controles Persistencia
+  $('#btnExportarJSON').onclick = exportarJSON;
+  $('#btnImportarJSON').onclick = () => $('#inputImportarJSON').click();
+  $('#inputImportarJSON').onchange = importarJSON;
+  $('#btnRestaurarTodo').onclick = restaurarTodo;
+
 });

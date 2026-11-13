@@ -428,6 +428,72 @@ button.secondary:hover {
   margin-right: 0.25rem;
 }
 
+/* ---------- Tabla de procesos CPU (edición en vivo) ---------- */
+#tablaProcesosCPU input {
+  width: 70px;
+  padding: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-body);
+  color: var(--text-main);
+}
+
+#tablaProcesosCPU input:focus {
+  outline: 2px solid var(--accent);
+}
+
+/* ---------- Tabla Comparativa ---------- */
+.comparativo-wrap {
+  overflow-x: auto;
+  margin-top: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+}
+
+.comparativo-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.comparativo-wrap th, .comparativo-wrap td {
+  padding: 0.6rem 0.8rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.comparativo-wrap th {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.comparativo-wrap th:first-child, .comparativo-wrap td:first-child {
+  text-align: left;
+  background: rgba(0,0,0,0.03);
+  font-weight: 600;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+
+.comparativo-wrap tr.mejor {
+  background: rgba(0, 176, 80, 0.15);
+}
+
+.comparativo-wrap .mejor-badge {
+  background: #00b050;
+  color: #fff;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
 /* ---------- Utilidades ---------- */
 .oculto { display: none !important; }
 .alerta { color: #ff0000; font-weight: 600; }
