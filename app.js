@@ -505,7 +505,11 @@ function calcularEstadisticas(sim) {
   const n = procs.length;
   const usoTotal = totalEjecucion + ticksPL;
   // Tiempo encendido = instante final máximo (If) de toda la simulación
-  const tiempoEncendido = procs.length > 0 ? Math.max(...procs.map(p => pp[p.id].fin)) : 0;
+  let tiempoEncendido = 0;
+  for (const p of procs) {
+    const f = pp[p.id]?.fin;
+    if (typeof f === 'number' && f > tiempoEncendido) tiempoEncendido = f;
+  }
   const cpuDesocupada = tiempoEncendido - usoTotal;
   const pctUsoCPU = tiempoEncendido > 0 ? ((usoTotal / tiempoEncendido) * 100) : 0;
 
@@ -657,7 +661,13 @@ function togglePlay(algoritmo) {
 function ejecutarHastaElFinal(algoritmo) {
   const sim = STATE.simulaciones[algoritmo];
   if (sim.playing) { togglePlay(algoritmo); }
-  while (!sim.finished) pasoTick(sim);
+  // Safety limit para evitar bucles infinitos si algo queda atrapado
+  const maxTicks = 100000;
+  let ticks = 0;
+  while (!sim.finished && ticks < maxTicks) {
+    pasoTick(sim);
+    ticks++;
+  }
   calcularEstadisticas(sim);
   renderTodoAlgoritmo(algoritmo);
 }
