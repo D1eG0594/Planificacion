@@ -228,6 +228,11 @@ function crearSimulacion(algoritmo) {
     tickActual: 0,
     finished: false,
     timeline: [],
+    colaListos: [],
+    bloqueados: [],
+    enCPU: null,
+    esPL: false,
+    ejecutandoEsteTick: null,
     quantumRestante: 0,
     quantum: 3,
     usarPL: true
@@ -392,12 +397,13 @@ function pasoSRTF(sim, t) {
 
 function pasoRR(sim, t) {
   if (!sim.colaListos) sim.colaListos = [];
+  if (!sim.bloqueados) sim.bloqueados = [];
   const Q = sim.quantum;
   const usarPL = sim.usarPL;
   let ejecutando = null;
 
-  // Inicializar quantumRestante si es 0 (primera vez)
-  if (sim.quantumRestante <= 0) sim.quantumRestante = Q;
+  // Inicializar quantumRestante
+  if (sim.quantumRestante === undefined || sim.quantumRestante <= 0) sim.quantumRestante = Q;
 
   // 1. Si no hay proceso en CPU y hay listos, verificar si necesita PL
   if (!sim.enCPU && sim.colaListos.length > 0) {
@@ -414,14 +420,11 @@ function pasoRR(sim, t) {
   }
 
   // 2. Si venimos de un tick PL, asignar CPU Y ejecutar en este mismo tick
-  if (sim.esPL) {
+  if (sim.esPL && !sim.enCPU && sim.colaListos.length > 0) {
     sim.esPL = false;
-    if (sim.colaListos.length > 0) {
-      sim.enCPU = sim.colaListos.shift();
-      if (sim.enCPU.firstExecStart === null) sim.enCPU.firstExecStart = t;
-      sim.quantumRestante = Q;
-    }
-    // Caer a la ejecución abajo para que el proceso asigne ejecute este tick
+    sim.enCPU = sim.colaListos.shift();
+    if (sim.enCPU.firstExecStart === null) sim.enCPU.firstExecStart = t;
+    sim.quantumRestante = Q;
   }
 
   // 3. Ejecutar proceso en CPU
