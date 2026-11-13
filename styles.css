@@ -267,6 +267,13 @@ td button.secondary:hover { background: var(--secondary-hover); }
   box-sizing: border-box;
 }
 
+/* Celda vacía para alinear con etiqueta de procesos (50px) */
+.gantt-timeline-cell.empty {
+  background: var(--bg-panel);
+  min-width: 50px;
+  width: 50px;
+}
+
 /* Contenedor wrapper para alinear Gantt + Timeline */
 .gantt-wrapper {
   display: flex;

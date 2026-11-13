@@ -478,8 +478,8 @@ function calcularEstadisticas(sim) {
 
   const n = procs.length;
   const usoTotal = totalEjecucion + ticksPL;
-  // Tiempo encendido = máximo If entre todos los procesos
-  const tiempoEncendido = Math.max(...Object.values(porProceso).map(s => s.fin));
+  // Tiempo encendido = último tick procesado de la simulación
+  const tiempoEncendido = sim.tickActual > 0 ? sim.tickActual - 1 : 0;
   const cpuDesocupada = tiempoEncendido - usoTotal;
   const pctUsoCPU = tiempoEncendido > 0 ? ((usoTotal / tiempoEncendido) * 100) : 0;
 
@@ -702,7 +702,9 @@ function renderGantt(algoritmo) {
   html += '</div>';
 
   // Línea de tiempo inferior (eje X con números 0, 1, 2...)
+  // Primera celda vacía para alinear con la columna de etiquetas de procesos
   html += '<div class="gantt-timeline">';
+  html += '<div class="gantt-timeline-cell empty"></div>';
   for (let c = 0; c < cols; c++) {
     html += `<div class="gantt-timeline-cell">${c}</div>`;
   }
