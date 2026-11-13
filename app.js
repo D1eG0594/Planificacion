@@ -193,6 +193,18 @@ function restaurarProcesosDefault() {
 
 // ========== MOTOR DE SIMULACIÓN ==========
 
+// Inserta un proceso en la cola manteniendo orden por llegada (y id como desempate)
+function insertarEnColaPorLlegada(cola, p) {
+  let i = 0;
+  while (
+    i < cola.length &&
+    (cola[i].arrival < p.arrival || (cola[i].arrival === p.arrival && cola[i].id < p.id))
+  ) {
+    i++;
+  }
+  cola.splice(i, 0, p);
+}
+
 function crearSimulacion(algoritmo) {
   // Clonar procesos
   const procs = STATE.procesos.map(p => ({
@@ -249,9 +261,9 @@ function pasoTick(sim) {
   const t = sim.tickActual;
   const procs = sim.procs;
 
-  // 1. Llegadas: procesos que llegan en este tick entran a cola
+  // 1. Llegadas: procesos que llegan en este tick entran a cola (orden por llegada)
   procs.filter(p => p.arrival === t && !p.finished && !p.blocked)
-    .forEach(p => { if (!sim.colaListos?.includes(p)) (sim.colaListos = sim.colaListos || []).push(p); });
+    .forEach(p => { if (!sim.colaListos?.includes(p)) insertarEnColaPorLlegada(sim.colaListos, p); });
 
   // 2. Liberados de bloqueo
   if (sim.bloqueados) {
@@ -263,7 +275,7 @@ function pasoTick(sim) {
     recienLiberados.forEach(b => {
       const p = procs.find(x => x.id === b.id);
       if (p) { p.blocked = false; p.blockRemaining = 0; }
-      if (!sim.colaListos?.includes(p)) (sim.colaListos = sim.colaListos || []).push(p);
+      if (!sim.colaListos?.includes(p)) insertarEnColaPorLlegada(sim.colaListos, p);
     });
     sim.bloqueados = liberados;
   } else {
