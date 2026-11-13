@@ -402,18 +402,18 @@ function pasoRR(sim, t) {
   // 1. Si no hay proceso en CPU y hay listos, verificar si necesita PL
   if (!sim.enCPU && sim.colaListos.length > 0) {
     if (usarPL) {
-      // Tick de PL
+      // Tick de PL: consumir 1 tick en el dispatcher, ningún proceso ejecuta
       sim.esPL = true;
       sim.ejecutandoEsteTick = null;
       return;
     }
-    // Sin PL, asignar directamente
+    // Sin PL, asignar directamente y ejecutar este mismo tick
     sim.enCPU = sim.colaListos.shift();
     if (sim.enCPU.firstExecStart === null) sim.enCPU.firstExecStart = t;
     sim.quantumRestante = Q;
   }
 
-  // 2. Si venimos de un tick PL, ahora asignar CPU
+  // 2. Si venimos de un tick PL, asignar CPU Y ejecutar en este mismo tick
   if (sim.esPL) {
     sim.esPL = false;
     if (sim.colaListos.length > 0) {
@@ -421,8 +421,7 @@ function pasoRR(sim, t) {
       if (sim.enCPU.firstExecStart === null) sim.enCPU.firstExecStart = t;
       sim.quantumRestante = Q;
     }
-    sim.ejecutandoEsteTick = null;
-    return;
+    // Caer a la ejecución abajo para que el proceso asigne ejecute este tick
   }
 
   // 3. Ejecutar proceso en CPU
@@ -521,6 +520,7 @@ function renderTodoAlgoritmo(algoritmo) {
   if (!sim) return;
   renderControles(algoritmo);
   renderGantt(algoritmo);
+  renderEstado(algoritmo);
   renderStats(algoritmo);
   actualizarRelojIndicador(algoritmo);
 }
@@ -724,6 +724,40 @@ function renderGantt(algoritmo) {
   html += '</div>';
 
   cont.innerHTML = html;
+}
+
+// ---------- Renderizado de estado: Listos y Bloqueados ----------
+function renderEstado(algoritmo) {
+  const sim = STATE.simulaciones[algoritmo];
+  if (!sim) return;
+
+  const ultimo = sim.timeline[sim.timeline.length - 1];
+  const cola = ultimo ? ultimo.cola : [];
+  const bloqueados = ultimo ? ultimo.bloqueados : [];
+
+  // Cola de Listos
+  const listosCont = $(`#listos-${algoritmo}`);
+  if (listosCont) {
+    if (cola.length === 0) {
+      listosCont.textContent = 'Vacía';
+      listosCont.className = 'state-list vacia';
+    } else {
+      listosCont.textContent = cola.join(', ');
+      listosCont.className = 'state-list';
+    }
+  }
+
+  // Procesos Bloqueados
+  const bloqueadosCont = $(`#bloqueados-${algoritmo}`);
+  if (bloqueadosCont) {
+    if (bloqueados.length === 0) {
+      bloqueadosCont.textContent = 'Ninguno';
+      bloqueadosCont.className = 'state-list vacia';
+    } else {
+      bloqueadosCont.textContent = bloqueados.map(b => `${b.id} (${b.rem})`).join(', ');
+      bloqueadosCont.className = 'state-list';
+    }
+  }
 }
 
 // ========== ESTADÍSTICAS ==========
