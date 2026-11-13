@@ -1,5 +1,5 @@
 /* =========================================
-   Simulador SO - Dashboard Técnico
+   Simulador Planificación CPU - Dashboard Técnico
    ========================================= */
 
 :root {
@@ -7,22 +7,30 @@
   --bg-body: #f5f7fa;
   --bg-card: #ffffff;
   --bg-header: #1f2a36;
+  --bg-panel: #f8fafc;
   --text-main: #1a1a1a;
   --text-muted: #6b7280;
   --border: #d1d5db;
   --accent: #2563eb;
   --accent-hover: #1d4ed8;
+  --secondary: #64748b;
+  --secondary-hover: #475569;
+  --success: #00b050;
+  --danger: #ff0000;
+  --info: #00b0f0;
+  --warning: #f59e0b;
 
-  /* Estados Gantt */
-  --color-listo: #d9d9d9;
-  --color-ejecutando: #00b050;
-  --color-bloqueado: #ff0000;
-  --color-pl: #00b0f0;
+  /* Estados Gantt - COLORES EXACTOS DEL ENUNCIADO */
+  --color-listo: #D9D9D9;    /* Gris - En cola de listos */
+  --color-ejecutando: #00B050; /* Verde - Ejecutando en CPU */
+  --color-bloqueado: #FF0000;  /* Rojo - Bloqueado E/S */
+  --color-pl: #00B0F0;         /* Azul - Dispatcher PL */
 
   /* Sombras y espaciado */
   --radius: 8px;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --transition: all 0.2s ease;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --transition: all 0.15s ease;
 }
 
 /* Tema oscuro */
@@ -30,471 +38,232 @@
   --bg-body: #0f172a;
   --bg-card: #1e293b;
   --bg-header: #020617;
+  --bg-panel: #1e293b;
   --text-main: #f1f5f9;
   --text-muted: #94a3b8;
   --border: #334155;
   --accent: #3b82f6;
   --accent-hover: #60a5fa;
+  --secondary: #94a3b8;
+  --secondary-hover: #cbd5e1;
   --color-listo: #475569;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
 }
 
 /* ---------- Reset y base ---------- */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html {
-  font-size: 16px;
-}
-
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
 body {
   font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background: var(--bg-body);
   color: var(--text-main);
   line-height: 1.5;
   transition: var(--transition);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
-
-a {
-  color: var(--accent);
-}
+a { color: var(--accent); }
 
 /* ---------- Header ---------- */
 .dashboard-header {
   background: var(--bg-header);
   color: #fff;
-  padding: 1.5rem 2rem;
+  padding: 1rem 1.5rem;
   box-shadow: var(--shadow);
+  flex-shrink: 0;
 }
-
-.header-content h1 {
-  font-size: 1.5rem;
-  margin-bottom: 0.25rem;
-}
-
-.subtitle {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-}
-
-.theme-toggle {
-  margin-top: 1rem;
-}
-
+.header-content h1 { font-size: 1.25rem; margin-bottom: 0.15rem; }
+.subtitle { color: var(--text-muted); font-size: 0.85rem; }
+.theme-toggle { margin-top: 0.5rem; }
 .theme-toggle button {
-  background: var(--border);
-  border: none;
-  color: var(--text-main);
-  font-size: 1.25rem;
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: var(--transition);
+  background: var(--border); border: none; color: var(--text-main);
+  font-size: 1.1rem; padding: 0.4rem 0.8rem; border-radius: var(--radius);
+  cursor: pointer; transition: var(--transition);
 }
+.theme-toggle button:hover { background: var(--accent); color: #fff; }
 
-.theme-toggle button:hover {
-  background: var(--accent);
-  color: #fff;
+/* ---------- Panel Configuración (Tiempos Simulación) ---------- */
+.config-panel {
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 1.5rem;
+  flex-shrink: 0;
 }
+.config-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;
+}
+.config-header h2 { font-size: 1rem; }
+.config-actions { display: flex; gap: 0.5rem; }
+
+/* Tabla procesos */
+.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+th { background: rgba(0,0,0,0.03); font-weight: 600; color: var(--text-main); position: sticky; top: 0; z-index: 2; }
+tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: rgba(0,0,0,0.03); }
+
+/* Inputs en tabla */
+.table-wrap input[type="number"] {
+  width: 80px; padding: 0.35rem 0.5rem; border: 1px solid var(--border);
+  border-radius: 4px; background: var(--bg-body); color: var(--text-main);
+  font-size: 0.85rem; text-align: center;
+}
+.table-wrap input[type="number"]:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
+.table-wrap input.small { width: 55px; }
+
+/* Bloqueos: lista dinámica */
+.bloqueos-list { display: flex; flex-wrap: wrap; gap: 0.25rem; align-items: center; }
+.bloqueo-item {
+  display: inline-flex; align-items: center; gap: 0.2rem;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 4px; padding: 0.2rem 0.4rem; font-size: 0.75rem;
+}
+.bloqueo-item input { width: 45px; padding: 0.15rem 0.3rem; border: 1px solid var(--border); border-radius: 3px; background: var(--bg-body); color: var(--text-main); font-size: 0.75rem; text-align: center; }
+.bloqueo-item input:focus { outline: 1px solid var(--accent); }
+.bloqueo-item .sep { color: var(--text-muted); }
+.bloqueo-item .btn-del { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 0.85rem; padding: 0; line-height: 1; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border-radius: 3px; }
+.bloqueo-item .btn-del:hover { background: rgba(255,0,0,0.1); }
+.btn-add-bloqueo { background: var(--accent); color: #fff; border: none; padding: 0.2rem 0.5rem; border-radius: 3px; cursor: pointer; font-size: 0.75rem; transition: var(--transition); }
+.btn-add-bloqueo:hover { background: var(--accent-hover); }
+
+/* Botones tabla */
+td button { padding: 0.3rem 0.6rem; font-size: 0.75rem; }
+td button.secondary { background: var(--secondary); color: #fff; }
+td button.secondary:hover { background: var(--secondary-hover); }
 
 /* ---------- Navegación por pestañas ---------- */
 .tabs-nav {
-  display: flex;
-  gap: 0.25rem;
-  padding: 0.75rem 2rem;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
-  overflow-x: auto;
+  display: flex; gap: 0.25rem; padding: 0.5rem 1.5rem;
+  background: var(--bg-card); border-bottom: 1px solid var(--border);
+  overflow-x: auto; flex-shrink: 0;
 }
-
 .tab-btn {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  padding: 0.6rem 1rem;
-  cursor: pointer;
-  border-radius: var(--radius);
-  font-size: 0.95rem;
-  transition: var(--transition);
-  white-space: nowrap;
+  background: transparent; border: 1px solid var(--border); color: var(--text-muted);
+  padding: 0.5rem 1rem; cursor: pointer; border-radius: var(--radius); font-size: 0.85rem; font-weight: 600;
+  transition: var(--transition); white-space: nowrap;
 }
-
-.tab-btn:hover {
-  color: var(--text-main);
-  background: rgba(0,0,0,0.03);
-}
-
-.tab-btn.active {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
+.tab-btn:hover { color: var(--text-main); background: rgba(0,0,0,0.03); }
+.tab-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 /* ---------- Main ---------- */
-.dashboard-main {
-  padding: 1.5rem 2rem;
-  max-width: 100%;
-  overflow-x: auto;
-}
+.dashboard-main { flex: 1; padding: 1rem 1.5rem; overflow-x: auto; }
 
 /* ---------- Tarjetas de módulo ---------- */
 .module-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  overflow: hidden;
 }
+.algo-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.02); }
+.algo-header h2 { font-size: 1.1rem; }
 
-.module-card h2 {
-  margin-bottom: 1rem;
-  font-size: 1.25rem;
-}
-
-/* ---------- Grupos y parámetros ---------- */
-.param-group, .programs-group, .matriz-group {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem;
-  margin-bottom: 1rem;
-  background: rgba(0,0,0,0.02);
-}
-
-.param-group legend, .programs-group legend, .matriz-group legend {
-  font-weight: 600;
-  font-size: 0.95rem;
-  padding: 0 0.5rem;
-  color: var(--text-main);
-}
-
-.param-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.param-row label {
-  min-width: 160px;
-  font-size: 0.95rem;
-}
-
-.param-row input[type="number"] {
-  width: 120px;
-  padding: 0.4rem;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: var(--bg-body);
-  color: var(--text-main);
-}
-
-.param-info {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-/* ---------- Tablas ---------- */
-.table-wrap {
-  overflow-x: auto;
-  margin-bottom: 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-}
-
-th, td {
-  padding: 0.5rem 0.75rem;
-  text-align: left;
+/* ---------- Controles CPU ---------- */
+.cpu-controls {
+  display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+  padding: 0.75rem 1.5rem; background: var(--bg-panel);
   border-bottom: 1px solid var(--border);
+}
+.cpu-controls.rr-controls { gap: 0.75rem; }
+.cpu-controls .control-group { display: flex; align-items: center; gap: 0.5rem; }
+.cpu-controls label { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
+.cpu-controls select, .cpu-controls input[type="number"] {
+  padding: 0.35rem 0.5rem; border: 1px solid var(--border); border-radius: 4px;
+  background: var(--bg-body); color: var(--text-main); font-size: 0.85rem;
+}
+.cpu-controls select:focus, .cpu-controls input:focus { outline: 2px solid var(--accent); }
+.cpu-controls .btn { padding: 0.4rem 0.75rem; font-size: 0.8rem; border-radius: 4px; cursor: pointer; transition: var(--transition); border: none; font-weight: 500; }
+.cpu-controls .btn.primary { background: var(--accent); color: #fff; }
+.cpu-controls .btn.primary:hover { background: var(--accent-hover); }
+.cpu-controls .btn.secondary { background: var(--secondary); color: #fff; }
+.cpu-controls .btn.secondary:hover { background: var(--secondary-hover); }
+.cpu-controls .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.cpu-controls .clock-indicator {
+  margin-left: auto; font-size: 0.8rem; color: var(--text-muted);
+  background: var(--bg-card); padding: 0.35rem 0.75rem; border-radius: 4px;
+  border: 1px solid var(--border); font-family: monospace;
   white-space: nowrap;
-}
-
-th {
-  background: rgba(0,0,0,0.03);
-  font-weight: 600;
-  color: var(--text-main);
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-
-tr:last-child td {
-  border-bottom: none;
-}
-
-tbody tr:hover {
-  background: rgba(0,0,0,0.03);
-}
-
-/* ---------- Acciones de tabla ---------- */
-.table-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-top: 0.5rem;
-}
-
-button {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: var(--transition);
-}
-
-button:hover {
-  background: var(--accent-hover);
-}
-
-button.secondary {
-  background: var(--border);
-  color: var(--text-main);
-}
-
-button.secondary:hover {
-  background: var(--text-muted);
-  color: #fff;
-}
-
-/* ---------- Indicador resumen memoria ---------- */
-.resumen-memoria {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem;
-  margin-top: 1rem;
-  font-size: 0.95rem;
-}
-
-/* ---------- Matriz de simulación ---------- */
-.matriz-wrap {
-  font-size: 0.85rem;
-}
-
-.matriz-wrap th, .matriz-wrap td {
-  padding: 0.4rem 0.5rem;
-  text-align: center;
-}
-
-.matriz-wrap th:first-child, .matriz-wrap td:first-child {
-  text-align: left;
-  background: rgba(0,0,0,0.03);
-  font-weight: 600;
-  position: sticky;
-  left: 0;
-  z-index: 2;
-}
-
-.matriz-actions {
-  margin-top: 0.5rem;
-}
-
-/* ---------- Resultado instantes ---------- */
-.resultado-instantes {
-  margin-top: 1rem;
-  font-size: 0.9rem;
 }
 
 /* ---------- Contenedor Gantt ---------- */
 .gantt-container {
-  margin-top: 1rem;
-  overflow-x: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg-body);
+  padding: 1rem 1.5rem; overflow-x: auto; overflow-y: auto;
+  max-height: 45vh; background: var(--bg-body);
 }
-
-.gantt-grid {
-  display: grid;
-  border-collapse: collapse;
-  min-width: 600px;
-}
-
-.gantt-row {
-  display: contents;
-}
-
+.gantt-grid { display: grid; grid-auto-flow: row; gap: 0; min-width: max-content; }
+.gantt-row { display: contents; }
 .gantt-cell {
-  border: 1px solid var(--border);
-  padding: 0.25rem 0.5rem;
-  text-align: center;
-  font-size: 0.8rem;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: 1px solid var(--border); padding: 0; text-align: center;
+  font-size: 0.7rem; min-width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; transition: background-color 0.1s;
 }
-
-.gantt-cell.listo { background: var(--color-listo); }
-.gantt-cell.ejecutando { background: var(--color-ejecutando); color: #fff; }
-.gantt-cell.bloqueado { background: var(--color-bloqueado); color: #fff; }
-.gantt-cell.pl { background: var(--color-pl); color: #fff; font-weight: 600; }
-
 .gantt-cell.header {
-  background: rgba(0,0,0,0.03);
-  font-weight: 600;
-  position: sticky;
-  top: 0;
+  background: var(--bg-panel); font-weight: 700; color: var(--text-main);
+  position: sticky; top: 0; z-index: 10; font-size: 0.7rem;
 }
-
 .gantt-cell.label {
-  background: rgba(0,0,0,0.03);
-  font-weight: 600;
-  position: sticky;
-  left: 0;
-  z-index: 2;
+  background: var(--bg-panel); font-weight: 700; color: var(--text-main);
+  position: sticky; left: 0; z-index: 5; min-width: 50px; max-width: 50px;
+  font-size: 0.75rem; text-align: right; padding-right: 0.5rem;
 }
+.gantt-cell.label.pl-label { background: var(--color-pl); color: #fff; }
 
-/* ---------- Estadísticas ---------- */
-.estadisticas-wrap {
-  margin-top: 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem;
-  background: var(--bg-body);
-}
+/* Estados Gantt - COLORES EXACTOS */
+.gantt-cell.estado-listo { background: var(--color-listo); }
+.gantt-cell.estado-ejecutando { background: var(--color-ejecutando); color: #fff; }
+.gantt-cell.estado-bloqueado { background: var(--color-bloqueado); color: #fff; }
+.gantt-cell.estado-pl { background: var(--color-pl); color: #fff; font-weight: 700; }
+.gantt-cell.estado-vacio { background: transparent; }
 
-.estadisticas-wrap table {
-  font-size: 0.85rem;
-}
+/* Tooltip en celdas */
+.gantt-cell[title] { cursor: help; }
 
-/* ---------- Debugger ---------- */
-.debugger-panel {
-  margin-top: 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem;
-  background: var(--bg-body);
-  font-size: 0.85rem;
-}
+/* ---------- Contenedor Estadísticas ---------- */
+.stats-container { padding: 1rem 1.5rem; background: var(--bg-panel); border-top: 1px solid var(--border); }
+.stats-container h3 { font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--text-muted); }
+.stats-container table { font-size: 0.75rem; }
+.stats-container th, .stats-container td { padding: 0.4rem 0.5rem; }
+.stats-container th:first-child, .stats-container td:first-child { text-align: left; min-width: 70px; }
+.stats-container td.num { text-align: right; font-family: monospace; }
+.stats-container tr.total-row { font-weight: 700; background: rgba(0,0,0,0.03); }
+.stats-container tr.pl-row { background: rgba(0,176,240,0.1); }
+.stats-container tr.mejor { background: rgba(0,176,80,0.15); }
 
-/* ---------- Footer / Persistencia ---------- */
-.dashboard-footer {
-  padding: 1rem 2rem;
-  background: var(--bg-card);
-  border-top: 1px solid var(--border);
-}
+.metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.metric-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.75rem; }
+.metric-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem; }
+.metric-value { font-size: 1rem; font-weight: 700; color: var(--text-main); font-family: monospace; }
 
-.persistencia {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-/* ---------- Controles CPU ---------- */
-.cpu-controles {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 0.75rem;
-  padding: 0.75rem;
-  background: var(--bg-body);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.rr-controles {
-  flex-wrap: wrap;
-}
-
-.tick-label {
-  margin-left: auto;
-  font-weight: 600;
-  color: var(--accent);
-  font-size: 0.95rem;
-}
-
-.cpu-controles input[type="number"] {
-  width: 50px;
-  padding: 0.35rem;
-}
-
-.cpu-controles input[type="checkbox"] {
-  margin-right: 0.25rem;
-}
-
-/* ---------- Tabla de procesos CPU (edición en vivo) ---------- */
-#tablaProcesosCPU input {
-  width: 70px;
-  padding: 0.3rem;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: var(--bg-body);
-  color: var(--text-main);
-}
-
-#tablaProcesosCPU input:focus {
-  outline: 2px solid var(--accent);
-}
-
-/* ---------- Tabla Comparativa ---------- */
-.comparativo-wrap {
-  overflow-x: auto;
-  margin-top: 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg-card);
-}
-
-.comparativo-wrap table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-}
-
-.comparativo-wrap th, .comparativo-wrap td {
-  padding: 0.6rem 0.8rem;
-  text-align: center;
-  border-bottom: 1px solid var(--border);
-}
-
-.comparativo-wrap th {
-  background: var(--accent);
-  color: #fff;
-  font-weight: 600;
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-
-.comparativo-wrap th:first-child, .comparativo-wrap td:first-child {
-  text-align: left;
-  background: rgba(0,0,0,0.03);
-  font-weight: 600;
-  position: sticky;
-  left: 0;
-  z-index: 2;
-}
-
-.comparativo-wrap tr.mejor {
-  background: rgba(0, 176, 80, 0.15);
-}
-
-.comparativo-wrap .mejor-badge {
-  background: #00b050;
-  color: #fff;
-  padding: 0.15rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
+/* ---------- Botones generales ---------- */
+.btn { background: var(--accent); color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.85rem; transition: var(--transition); font-weight: 500; }
+.btn:hover { background: var(--accent-hover); }
+.btn.secondary { background: var(--secondary); color: #fff; }
+.btn.secondary:hover { background: var(--secondary-hover); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.small { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
 
 /* ---------- Utilidades ---------- */
 .oculto { display: none !important; }
-.alerta { color: #ff0000; font-weight: 600; }
-.ok { color: #00b050; font-weight: 600; }
+.alerta { color: var(--danger); font-weight: 600; }
+.ok { color: var(--success); font-weight: 600; }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.mt-1 { margin-top: 0.5rem; }
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar { height: 8px; width: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-body); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .config-panel, .dashboard-main { padding: 0.75rem 1rem; }
+  .cpu-controls { padding: 0.5rem 1rem; }
+  .gantt-container { padding: 0.5rem 1rem; }
+  .stats-container { padding: 0.75rem 1rem; }
+}
