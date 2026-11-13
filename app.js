@@ -261,14 +261,25 @@ function recalcularTodos() {
   renderTodoAlgoritmo(STATE.panelActivo);
 }
 
+// Inserta un proceso en la cola según el algoritmo
+function insertarEnCola(sim, p) {
+  if (sim.algoritmo === 'fcfs') {
+    // FCFS: estricto orden de llegada inicial (y id como desempate)
+    insertarEnColaPorLlegada(sim.colaListos, p);
+  } else {
+    // SJF/SRTF: se re-ordena al elegir, RR: va al final (estándar)
+    sim.colaListos.push(p);
+  }
+}
+
 // Avanzar un tick en la simulación
 function pasoTick(sim) {
   const t = sim.tickActual;
   const procs = sim.procs;
 
-  // 1. Llegadas: procesos que llegan en este tick entran a cola (al final)
+  // 1. Llegadas: procesos que llegan en este tick entran a cola
   procs.filter(p => p.arrival === t && !p.finished && !p.blocked)
-    .forEach(p => { if (!sim.colaListos?.includes(p)) sim.colaListos.push(p); });
+    .forEach(p => { if (!sim.colaListos?.includes(p)) insertarEnCola(sim, p); });
 
   // 2. Liberados de bloqueo
   if (sim.bloqueados) {
@@ -280,7 +291,7 @@ function pasoTick(sim) {
     recienLiberados.forEach(b => {
       const p = procs.find(x => x.id === b.id);
       if (p) { p.blocked = false; p.blockRemaining = 0; }
-      if (!sim.colaListos?.includes(p)) sim.colaListos.push(p);
+      if (!sim.colaListos?.includes(p)) insertarEnCola(sim, p);
     });
     sim.bloqueados = liberados;
   } else {
