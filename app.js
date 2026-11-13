@@ -660,33 +660,27 @@ function renderGantt(algoritmo) {
   const procs = STATE.procesos.map(p => p.id);
   const isRR = algoritmo === 'rr';
   const rows = isRR ? ['PL', ...procs] : procs;
-  // Columnas: 0 (vacía [-1,0]) + ticks 0..tickActual
-  // gantt[t] corresponde a intervalo [t, t+1] = columna t+1
+
+  // Número total de columnas = ticks mostrados + 1 (columna 0 vacía al inicio)
+  // El eje X muestra 0, 1, 2, ... hasta tickActual
   const maxTick = Math.max(sim.tickActual, 0);
-  const cols = maxTick + 2; // col 0 vacía + col 1..maxTick+1 para ticks 0..maxTick
+  const cols = maxTick + 1; // columnas para ticks 0..maxTick
 
   let html = '<div class="gantt-grid">';
-
-  // Fila de encabezado (tiempos): 0, 1, 2...
-  html += '<div class="gantt-row">';
-  html += '<div class="gantt-cell header label">t</div>';
-  for (let c = 0; c < cols; c++) {
-    html += `<div class="gantt-cell header">${c}</div>`;
-  }
-  html += '</div>';
 
   // Filas de procesos (y PL para RR)
   rows.forEach(rowId => {
     const isPL = rowId === 'PL';
     html += '<div class="gantt-row">';
+    // Etiqueta del proceso a la izquierda
     html += `<div class="gantt-cell label ${isPL ? 'pl-label' : ''}">${rowId}</div>`;
     for (let c = 0; c < cols; c++) {
       let estado = 'vacio';
-      if (c === 0) {
-        // Columna 0 = intervalo [-1, 0] = siempre vacía
+      const t = c; // columna c = tiempo t (intervalo [t-1, t] pero mostramos t)
+      // Antes de la llegada del proceso: vacío
+      if (!isPL && t < STATE.procesos.find(p => p.id === rowId).arrival) {
         estado = 'vacio';
       } else {
-        const t = c - 1; // gantt index
         const g = sim.gantt[t];
         if (g) {
           if (isPL) {
@@ -698,12 +692,23 @@ function renderGantt(algoritmo) {
           }
         }
       }
-      html += `<div class="gantt-cell estado-${estado}" title="${rowId} @ col=${c} (t=${c-1}): ${estado}"></div>`;
+      // Para fila PL, mostrar número "1" dentro de celda azul
+      let contenido = '';
+      if (estado === 'pl') contenido = '1';
+      html += `<div class="gantt-cell estado-${estado}" title="${rowId} t=${t}: ${estado}">${contenido}</div>`;
     }
     html += '</div>';
   });
 
   html += '</div>';
+
+  // Línea de tiempo inferior (eje X con números 0, 1, 2...)
+  html += '<div class="gantt-timeline">';
+  for (let c = 0; c < cols; c++) {
+    html += `<div class="gantt-timeline-cell">${c}</div>`;
+  }
+  html += '</div>';
+
   cont.innerHTML = html;
 }
 
