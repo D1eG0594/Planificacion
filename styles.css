@@ -1,0 +1,434 @@
+/* =========================================
+   Simulador SO - Dashboard Técnico
+   ========================================= */
+
+:root {
+  /* Colores tema claro */
+  --bg-body: #f5f7fa;
+  --bg-card: #ffffff;
+  --bg-header: #1f2a36;
+  --text-main: #1a1a1a;
+  --text-muted: #6b7280;
+  --border: #d1d5db;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+
+  /* Estados Gantt */
+  --color-listo: #d9d9d9;
+  --color-ejecutando: #00b050;
+  --color-bloqueado: #ff0000;
+  --color-pl: #00b0f0;
+
+  /* Sombras y espaciado */
+  --radius: 8px;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --transition: all 0.2s ease;
+}
+
+/* Tema oscuro */
+[data-theme="dark"] {
+  --bg-body: #0f172a;
+  --bg-card: #1e293b;
+  --bg-header: #020617;
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border: #334155;
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  --color-listo: #475569;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- Reset y base ---------- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg-body);
+  color: var(--text-main);
+  line-height: 1.5;
+  transition: var(--transition);
+}
+
+a {
+  color: var(--accent);
+}
+
+/* ---------- Header ---------- */
+.dashboard-header {
+  background: var(--bg-header);
+  color: #fff;
+  padding: 1.5rem 2rem;
+  box-shadow: var(--shadow);
+}
+
+.header-content h1 {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.theme-toggle {
+  margin-top: 1rem;
+}
+
+.theme-toggle button {
+  background: var(--border);
+  border: none;
+  color: var(--text-main);
+  font-size: 1.25rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.theme-toggle button:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ---------- Navegación por pestañas ---------- */
+.tabs-nav {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.75rem 2rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.tab-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.tab-btn:hover {
+  color: var(--text-main);
+  background: rgba(0,0,0,0.03);
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ---------- Main ---------- */
+.dashboard-main {
+  padding: 1.5rem 2rem;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* ---------- Tarjetas de módulo ---------- */
+.module-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.module-card h2 {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+/* ---------- Grupos y parámetros ---------- */
+.param-group, .programs-group, .matriz-group {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: rgba(0,0,0,0.02);
+}
+
+.param-group legend, .programs-group legend, .matriz-group legend {
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0 0.5rem;
+  color: var(--text-main);
+}
+
+.param-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.param-row label {
+  min-width: 160px;
+  font-size: 0.95rem;
+}
+
+.param-row input[type="number"] {
+  width: 120px;
+  padding: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-body);
+  color: var(--text-main);
+}
+
+.param-info {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* ---------- Tablas ---------- */
+.table-wrap {
+  overflow-x: auto;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+th, td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+th {
+  background: rgba(0,0,0,0.03);
+  font-weight: 600;
+  color: var(--text-main);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover {
+  background: rgba(0,0,0,0.03);
+}
+
+/* ---------- Acciones de tabla ---------- */
+.table-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: var(--transition);
+}
+
+button:hover {
+  background: var(--accent-hover);
+}
+
+button.secondary {
+  background: var(--border);
+  color: var(--text-main);
+}
+
+button.secondary:hover {
+  background: var(--text-muted);
+  color: #fff;
+}
+
+/* ---------- Indicador resumen memoria ---------- */
+.resumen-memoria {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+}
+
+/* ---------- Matriz de simulación ---------- */
+.matriz-wrap {
+  font-size: 0.85rem;
+}
+
+.matriz-wrap th, .matriz-wrap td {
+  padding: 0.4rem 0.5rem;
+  text-align: center;
+}
+
+.matriz-wrap th:first-child, .matriz-wrap td:first-child {
+  text-align: left;
+  background: rgba(0,0,0,0.03);
+  font-weight: 600;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+
+.matriz-actions {
+  margin-top: 0.5rem;
+}
+
+/* ---------- Resultado instantes ---------- */
+.resultado-instantes {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+/* ---------- Contenedor Gantt ---------- */
+.gantt-container {
+  margin-top: 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-body);
+}
+
+.gantt-grid {
+  display: grid;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.gantt-row {
+  display: contents;
+}
+
+.gantt-cell {
+  border: 1px solid var(--border);
+  padding: 0.25rem 0.5rem;
+  text-align: center;
+  font-size: 0.8rem;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gantt-cell.listo { background: var(--color-listo); }
+.gantt-cell.ejecutando { background: var(--color-ejecutando); color: #fff; }
+.gantt-cell.bloqueado { background: var(--color-bloqueado); color: #fff; }
+.gantt-cell.pl { background: var(--color-pl); color: #fff; font-weight: 600; }
+
+.gantt-cell.header {
+  background: rgba(0,0,0,0.03);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+}
+
+.gantt-cell.label {
+  background: rgba(0,0,0,0.03);
+  font-weight: 600;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+
+/* ---------- Estadísticas ---------- */
+.estadisticas-wrap {
+  margin-top: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  background: var(--bg-body);
+}
+
+.estadisticas-wrap table {
+  font-size: 0.85rem;
+}
+
+/* ---------- Debugger ---------- */
+.debugger-panel {
+  margin-top: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  background: var(--bg-body);
+  font-size: 0.85rem;
+}
+
+/* ---------- Footer / Persistencia ---------- */
+.dashboard-footer {
+  padding: 1rem 2rem;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+}
+
+.persistencia {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ---------- Controles CPU ---------- */
+.cpu-controles {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  background: var(--bg-body);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.rr-controles {
+  flex-wrap: wrap;
+}
+
+.tick-label {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 0.95rem;
+}
+
+.cpu-controles input[type="number"] {
+  width: 50px;
+  padding: 0.35rem;
+}
+
+.cpu-controles input[type="checkbox"] {
+  margin-right: 0.25rem;
+}
+
+/* ---------- Utilidades ---------- */
+.oculto { display: none !important; }
+.alerta { color: #ff0000; font-weight: 600; }
+.ok { color: #00b050; font-weight: 600; }

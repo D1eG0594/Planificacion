@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador SO - Memoria y Planificación de CPU</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- Encabezado -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <h1>Simulador Interactivo de Memoria y Planificación de CPU</h1>
+      <p class="subtitle">Sistemas Operativos - Proyecto Final</p>
+    </div>
+    <div class="theme-toggle">
+      <button id="btnTheme" type="button" aria-label="Cambiar tema claro/oscuro">☀️/🌙</button>
+    </div>
+  </header>
+
+  <!-- Navegación por pestañas -->
+  <nav class="tabs-nav" aria-label="Módulos del simulador">
+    <button class="tab-btn active" data-tab="memoria">Memoria</button>
+    <button class="tab-btn" data-tab="fcfs">FCFS</button>
+    <button class="tab-btn" data-tab="sjf">SJF</button>
+    <button class="tab-btn" data-tab="srtf">SRTF</button>
+    <button class="tab-btn" data-tab="rr">Round Robin</button>
+    <button class="tab-btn" data-tab="comparativo">Comparativo</button>
+  </nav>
+
+  <!-- Contenido principal -->
+  <main class="dashboard-main">
+
+    <!-- ========== PESTAÑA: MEMORIA ========== -->
+    <section id="panel-memoria" class="tab-panel active">
+
+      <div class="module-card">
+        <h2>💾 Gestión de Memoria</h2>
+
+        <!-- 2.1 Parámetros globales -->
+        <fieldset class="param-group">
+          <legend>Parámetros Globales</legend>
+          <div class="param-row">
+            <label>RAM Total (MiB):</label>
+            <input type="number" id="ramTotal" value="16" min="1" />
+            <span class="param-info">= <span id="ramKiB">16384</span> KiB | <span id="ramBytes">16777216</span> Bytes</span>
+          </div>
+          <div class="param-row">
+            <label>Encabezado .exe (bytes):</label>
+            <input type="number" id="exeHeader" value="2544" min="0" />
+          </div>
+          <div class="param-row">
+            <label>Pila .stack (bytes):</label>
+            <input type="number" id="stackSize" value="65536" min="0" />
+          </div>
+          <div class="param-row">
+            <label>Montículo .heap (bytes):</label>
+            <input type="number" id="heapSize" value="131072" min="0" />
+          </div>
+          <div class="param-row">
+            <label>Número de tiempos (1-N):</label>
+            <input type="number" id="numTiempos" value="5" min="1" />
+          </div>
+        </fieldset>
+
+        <!-- 2.2 Tabla de programas instalados -->
+        <fieldset class="programs-group">
+          <legend>Programas Instalados</legend>
+          <div class="table-wrap">
+            <table id="tablaProgramas">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Tamaño Disco</th>
+                  <th>.text</th>
+                  <th>.data</th>
+                  <th>RAM inicial</th>
+                  <th>.bss</th>
+                  <th>RAM a USAR</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyProgramas"></tbody>
+            </table>
+          </div>
+          <div class="table-actions">
+            <button id="btnAgregarPrograma" type="button">+ Agregar programa</button>
+            <button id="btnRestaurarProgramas" type="button">Restaurar por defecto</button>
+          </div>
+        </fieldset>
+
+        <!-- Indicador resumen -->
+        <div class="resumen-memoria" id="resumenMemoria">
+          <p>Cargando resumen...</p>
+        </div>
+
+        <!-- 2.3 Matriz de simulación temporal -->
+        <fieldset class="matriz-group">
+          <legend>Matriz de Simulación Temporal</legend>
+          <div class="table-wrap matriz-wrap">
+            <table id="tablaMatriz">
+              <thead></thead>
+              <tbody id="tbodyMatriz"></tbody>
+            </table>
+          </div>
+          <div class="table-actions matriz-actions">
+            <button id="btnRecalcularMatriz" type="button">Recalcular simulación</button>
+          </div>
+        </fieldset>
+
+        <!-- Resultado por instante -->
+        <div class="resultado-instantes" id="resultadoInstantes">
+          <p>Resultados de simulación aparecerán aquí.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========== PESTAÑA: FCFS ========== -->
+    <section id="panel-fcfs" class="tab-panel" style="display:none;">
+      <div class="module-card">
+        <h2>⏱️ FCFS — First Come, First Served</h2>
+        <div class="cpu-controles">
+          <button id="btnFcfsAnt" type="button">◀ Anterior</button>
+          <button id="btnFcfsSig" type="button">Siguiente ▶</button>
+          <button id="btnFcfsPlay" type="button">▶ Play</button>
+          <button id="btnFcfsReset" type="button" class="secondary">Reiniciar</button>
+          <span id="lblFcfsTick" class="tick-label">Tick: 0</span>
+        </div>
+        <div id="gantt-fcfs" class="gantt-container"></div>
+        <div id="stats-fcfs" class="estadisticas-wrap"></div>
+        <div id="debug-fcfs" class="debugger-panel"></div>
+      </div>
+    </section>
+
+    <!-- ========== PESTAÑA: SJF ========== -->
+    <section id="panel-sjf" class="tab-panel" style="display:none;">
+      <div class="module-card">
+        <h2>🚀 SJF — Shortest Job First</h2>
+        <div class="cpu-controles">
+          <button id="btnSjfAnt" type="button">◀ Anterior</button>
+          <button id="btnSjfSig" type="button">Siguiente ▶</button>
+          <button id="btnSjfPlay" type="button">▶ Play</button>
+          <button id="btnSjfReset" type="button" class="secondary">Reiniciar</button>
+          <span id="lblSjfTick" class="tick-label">Tick: 0</span>
+        </div>
+        <div id="gantt-sjf" class="gantt-container"></div>
+        <div id="stats-sjf" class="estadisticas-wrap"></div>
+        <div id="debug-sjf" class="debugger-panel"></div>
+      </div>
+    </section>
+
+    <!-- ========== PESTAÑA: SRTF ========== -->
+    <section id="panel-srtf" class="tab-panel" style="display:none;">
+      <div class="module-card">
+        <h2>⚡ SRTF — Shortest Remaining Time First</h2>
+        <div class="cpu-controles">
+          <button id="btnSrtfAnt" type="button">◀ Anterior</button>
+          <button id="btnSrtfSig" type="button">Siguiente ▶</button>
+          <button id="btnSrtfPlay" type="button">▶ Play</button>
+          <button id="btnSrtfReset" type="button" class="secondary">Reiniciar</button>
+          <span id="lblSrtfTick" class="tick-label">Tick: 0</span>
+        </div>
+        <div id="gantt-srtf" class="gantt-container"></div>
+        <div id="stats-srtf" class="estadisticas-wrap"></div>
+        <div id="debug-srtf" class="debugger-panel"></div>
+      </div>
+    </section>
+
+    <!-- ========== PESTAÑA: ROUND ROBIN ========== -->
+    <section id="panel-rr" class="tab-panel" style="display:none;">
+      <div class="module-card">
+        <h2>🔄 Round Robin</h2>
+        <div class="cpu-controles rr-controles">
+          <label>Quantum Q: <input type="number" id="quantumRR" value="3" min="1" style="width:60px;" /></label>
+          <label><input type="checkbox" id="usarPLRR" checked /> Con dispatcher PL (costo 1 tick)</label>
+          <button id="btnRrAnt" type="button">◀ Anterior</button>
+          <button id="btnRrSig" type="button">Siguiente ▶</button>
+          <button id="btnRrPlay" type="button">▶ Play</button>
+          <button id="btnRrReset" type="button" class="secondary">Reiniciar</button>
+          <span id="lblRrTick" class="tick-label">Tick: 0</span>
+        </div>
+        <div id="gantt-rr" class="gantt-container"></div>
+        <div id="stats-rr" class="estadisticas-wrap"></div>
+        <div id="debug-rr" class="debugger-panel"></div>
+      </div>
+    </section>
+
+    <!-- ========== PESTAÑA COMPARATIVO ========== -->
+    <section id="panel-comparativo" class="tab-panel" style="display:none;">
+      <div class="module-card">
+        <h2>📊 Panel Comparativo Global</h2>
+        <div id="tablaComparativo" class="table-wrap"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Panel de persistencia -->
+  <footer class="dashboard-footer">
+    <div class="persistencia">
+      <button id="btnExportarJSON" type="button">Exportar JSON</button>
+      <button id="btnImportarJSON" type="button">Importar JSON</button>
+      <input type="file" id="inputImportarJSON" accept=".json" style="display:none;" />
+      <button id="btnRestaurarTodo" type="button">Restaurar valores por defecto</button>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
