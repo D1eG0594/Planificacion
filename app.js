@@ -371,24 +371,11 @@ function pasoSJF(sim, t) {
 function pasoSRTF(sim, t) {
   if (!sim.colaListos) sim.colaListos = [];
   let ejecutando = null;
-  // Candidatos: los listos + el que está en CPU
-  const candidatos = [...(sim.colaListos || [])];
-  if (sim.enCPU && !sim.enCPU.finished) candidatos.push(sim.enCPU);
-  if (candidatos.length > 0) {
-    candidatos.sort((a, b) => a.remaining - b.remaining || a.id.localeCompare(b.id));
-    const elegido = candidatos[0];
-    // Expropiar si es diferente
-    if (sim.enCPU && sim.enCPU.id !== elegido.id) {
-      if (!sim.enCPU.finished && !sim.enCPU.blocked) {
-        if (!sim.colaListos.includes(sim.enCPU)) sim.colaListos.push(sim.enCPU);
-      }
-      sim.enCPU = null;
-    }
-    if (!sim.enCPU) {
-      sim.enCPU = elegido;
-      sim.colaListos = sim.colaListos.filter(p => p.id !== elegido.id);
-      if (sim.enCPU.firstExecStart === null) sim.enCPU.firstExecStart = t;
-    }
+  // Si CPU libre, elegir de la cola el de menor remaining (como SJF no expropiativo)
+  if (!sim.enCPU && sim.colaListos.length > 0) {
+    sim.colaListos.sort((a, b) => a.remaining - b.remaining || a.id.localeCompare(b.id));
+    sim.enCPU = sim.colaListos.shift();
+    if (sim.enCPU.firstExecStart === null) sim.enCPU.firstExecStart = t;
   }
   // Ejecutar
   if (sim.enCPU) {
