@@ -243,17 +243,14 @@ td button.secondary:hover { background: var(--secondary-hover); }
 .gantt-cell.estado-pl { background: var(--color-pl); color: #fff; font-weight: 700; }
 .gantt-cell.estado-vacio { background: transparent; }
 
-/* Línea de tiempo inferior (eje X) */
+/* Línea de tiempo inferior (eje X) - MISMAS REGLAS que las celdas del Gantt */
 .gantt-timeline {
   display: flex;
   gap: 0;
-  border: 1px solid var(--border);
-  border-top: none;
   background: var(--bg-body);
 }
 .gantt-timeline-cell {
   border: 1px solid var(--border);
-  border-top: none;
   height: 22px;
   display: flex;
   align-items: center;
