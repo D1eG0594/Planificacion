@@ -507,7 +507,7 @@ function calcularEstadisticas(sim) {
   // Tiempo encendido = instante final máximo (If) de toda la simulación
   let tiempoEncendido = 0;
   for (const p of procs) {
-    const f = pp[p.id]?.fin;
+    const f = porProceso[p.id]?.fin;
     if (typeof f === 'number' && f > tiempoEncendido) tiempoEncendido = f;
   }
   const cpuDesocupada = tiempoEncendido - usoTotal;
