@@ -661,12 +661,11 @@ function renderGantt(algoritmo) {
   const isRR = algoritmo === 'rr';
   const rows = isRR ? ['PL', ...procs] : procs;
 
-  // Número total de columnas = ticks mostrados + 1 (columna 0 vacía al inicio)
-  // El eje X muestra 0, 1, 2, ... hasta tickActual
+  // Número total de columnas = ticks mostrados
   const maxTick = Math.max(sim.tickActual, 0);
   const cols = maxTick + 1; // columnas para ticks 0..maxTick
 
-  let html = '<div class="gantt-grid">';
+  let html = '<div class="gantt-wrapper">';
 
   // Filas de procesos (y PL para RR)
   rows.forEach(rowId => {
@@ -676,7 +675,7 @@ function renderGantt(algoritmo) {
     html += `<div class="gantt-cell label ${isPL ? 'pl-label' : ''}">${rowId}</div>`;
     for (let c = 0; c < cols; c++) {
       let estado = 'vacio';
-      const t = c; // columna c = tiempo t (intervalo [t-1, t] pero mostramos t)
+      const t = c; // columna c = tiempo t
       // Antes de la llegada del proceso: vacío
       if (!isPL && t < STATE.procesos.find(p => p.id === rowId).arrival) {
         estado = 'vacio';
